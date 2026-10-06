@@ -9,13 +9,14 @@ export type Post = {
 };
 
 // Only the server contacts the CMS. No administrator credentials are needed.
-export async function getPosts(slug?: string, categoryId?: number): Promise<Post[]> {
+export async function getPosts(slug?: string, categoryId?: number, search?: string): Promise<Post[]> {
   const base = process.env.WORDPRESS_API_URL;
   if (!base) throw new Error('WORDPRESS_API_URL is missing');
   const url = new URL(`${base.replace(/\/$/, '')}/posts`);
   url.searchParams.set('_embed', 'author,wp:term');
   url.searchParams.set('per_page', '12');
   if (categoryId) url.searchParams.set('categories', String(categoryId));
+  if (search) url.searchParams.set('search', search);
   if (slug) url.searchParams.set('slug', slug);
   const response = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error(`CMS returned ${response.status}`);

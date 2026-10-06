@@ -34,4 +34,14 @@ for (const other of allPosts.filter(item => !item.categories.includes(categoryId
 const missingCategory = await fetch(`${site}/?category=does-not-exist-studyhub`);
 assert.equal(missingCategory.status, 200);
 assert.ok((await missingCategory.text()).includes('Такої категорії немає'), 'Unknown category must show an explicit empty state');
-console.log('PASS: CMS article, homepage, article content, 404, private drafts, write protection, category inclusion/exclusion, active filter, unknown category.');
+const searchPage = await fetch(`${site}/?q=${encodeURIComponent('REST API')}&category=${encodeURIComponent(category.slug)}`);
+assert.equal(searchPage.status, 200);
+const searchHtml = await searchPage.text();
+assert.ok(searchHtml.includes(`/materialy/${post.slug}`), 'Search must find matching article inside selected category');
+assert.ok(searchHtml.includes('name="category"'), 'Search form must preserve category');
+assert.ok(searchHtml.includes('q=REST+API'), 'Category links must preserve search');
+const emptySearch = await fetch(`${site}/?q=studyhub-no-match-987654321`);
+const emptyHtml = await emptySearch.text();
+assert.ok(emptyHtml.includes('За цим запитом матеріалів не знайдено'), 'Unmatched search must display empty state');
+assert.ok(!emptyHtml.includes(`/materialy/${post.slug}`), 'Unmatched search must not return unrelated articles');
+console.log('PASS: CMS article, homepage, article content, 404, private drafts, write protection, category inclusion/exclusion, active filter, unknown category, search, combined filters, empty search.');
