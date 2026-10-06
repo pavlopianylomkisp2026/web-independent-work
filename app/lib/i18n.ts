@@ -1,0 +1,33 @@
+export type Language = 'uk' | 'en';
+export function languagePath(language: Language) { return language === 'en' ? '/en' : ''; }
+const english: Record<string, string> = {
+  'ЗНАННЯ, ЯКІ СТАЮТЬ ПРАКТИКОЮ': 'TURN KNOWLEDGE INTO PRACTICE',
+  'Від першого питання': 'From your first question',
+  'до власного ': 'to your own ',
+  'проєкту.': 'project.',
+  'Вивчай веброзробку крок за кроком. Зрозумілі пояснення, практичні приклади та матеріали, до яких хочеться повернутися.': 'Learn web development step by step. Clear explanations, practical examples, and resources worth returning to.',
+  'Почати навчання ': 'Start learning ',
+  'Власний темп. Реальні знання.': 'Your own pace. Practical knowledge.',
+  'ТВОЯ НАСТУПНА': 'YOUR NEXT', 'ВЕЛИКА ІДЕЯ': 'BIG IDEA',
+  'Починається': 'Starts', 'з цікавості.': 'with curiosity.',
+  'БІБЛІОТЕКА ЗНАНЬ': 'KNOWLEDGE LIBRARY', 'Почни з цікавого': 'Find your next discovery',
+  'Усі теми': 'All topics', 'Пошук матеріалів': 'Search articles', 'Наприклад: HTML або CSS': 'For example: HTML or CSS',
+  'Знайти': 'Search', 'Пошук: «': 'Search: “', '» · ': '” · ', 'Очистити пошук': 'Clear search', 'Усі': 'All',
+  'Матеріали тимчасово недоступні. Спробуй оновити сторінку трохи пізніше.': 'Articles are temporarily unavailable. Please try again later.',
+  'Такої категорії немає або вона ще не має опублікованих матеріалів. Обери іншу категорію.': 'This category does not exist or has no published articles. Choose another category.',
+  'Такої сторінки каталогу немає. Повернись до першої сторінки.': 'This catalogue page does not exist. Return to the first page.',
+  'За цим запитом матеріалів не знайдено. Зміни запит або категорію.': 'No articles match your search. Try another query or category.',
+  'У цій категорії поки немає матеріалів.': 'There are no articles in this category yet.',
+  'ЗРОЗУМІЙ · СПРОБУЙ · СТВОРИ': 'UNDERSTAND · EXPLORE · CREATE', 'МАТЕРІАЛ': 'ARTICLE',
+  'Читати матеріал ': 'Read article ', 'На першу': 'First page', '← Назад': '← Previous', 'Сторінка ': 'Page ', ' із ': ' of ', ' · Матеріалів: ': ' · Articles: ', 'Далі →': 'Next →',
+  'ПРО STUDYHUB': 'ABOUT STUDYHUB', 'Не просто читати.': 'Go beyond reading.', 'Розуміти й застосовувати.': 'Understand and apply.',
+  'Цей портал створений для студентів, які хочуть розібратися у вебтехнологіях. Починаємо з основ і пов’язуємо кожну нову ідею з практикою.': 'A portal for students exploring web technologies. Start with the basics and connect every new idea to practice.',
+  'Матеріали': 'Articles', 'Про портал': 'About', 'Місце для нових знань': 'A place for new knowledge',
+  'Навчальний проєкт · Інструментальні засоби вебтехнологій · 2026': 'Student project · Web Technology Tools · 2026',
+  '← Усі матеріали': '← All articles', 'НАВЧАЛЬНИЙ МАТЕРІАЛ': 'LEARNING RESOURCE', 'Редакція StudyHub': 'StudyHub editorial team',
+  'Перевір себе': 'Check your understanding', 'Поясни своїми словами, яку роль у цьому проєкті виконують CMS, API та фронтенд.': 'Explain in your own words the roles of the CMS, API, and frontend in this project.',
+  'Матеріал не знайдено': 'Article not found', 'Перевір адресу або обери інший матеріал.': 'Check the address or choose another article.', 'На головну ↗': 'Back to home ↗',
+  'Не вдалося завантажити матеріал': 'Unable to load the article', 'Спробуй ще раз трохи пізніше.': 'Please try again later.', 'Спробувати знову': 'Try again',
+  'Англійський переклад цього матеріалу ще не опублікований.': 'The Ukrainian translation of this article is not published yet.',
+};
+export function translator(language: Language) { return (text: string) => language === 'en' ? (english[text] ?? text) : text; }

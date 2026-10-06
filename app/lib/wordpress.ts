@@ -1,3 +1,4 @@
+import type { Language } from './i18n';
 import sanitizeHtml from 'sanitize-html';
 
 export type Category = { id: number; name: string; slug: string };
@@ -5,6 +6,7 @@ export type Category = { id: number; name: string; slug: string };
 export type FeaturedMedia = { source_url: string; alt_text?: string; media_details?: { width?: number; height?: number; sizes?: Record<string, { source_url: string }> } };
 
 export type Post = {
+  studyhub_language?: Language; studyhub_translations?: Partial<Record<Language, string>>;
   id: number; slug: string; date: string; categories: number[];
   title: { rendered: string }; excerpt: { rendered: string }; content: { rendered: string };
   _embedded?: { author?: { name: string }[]; "wp:term"?: Category[][]; "wp:featuredmedia"?: FeaturedMedia[] };
@@ -13,10 +15,11 @@ export type Post = {
 export const PAGE_SIZE = 3;
 export type Catalog = { posts: Post[]; total: number; totalPages: number };
 // Only the server contacts the CMS. No administrator credentials are needed.
-export async function getCatalog(categoryId?: number, search?: string, page = 1, slug?: string): Promise<Catalog> {
+export async function getCatalog(categoryId?: number, search?: string, page = 1, slug?: string, language: Language = 'uk'): Promise<Catalog> {
   const base = process.env.WORDPRESS_API_URL;
   if (!base) throw new Error('WORDPRESS_API_URL is missing');
   const url = new URL(`${base.replace(/\/$/, '')}/posts`);
+  url.searchParams.set('lang', language);
   url.searchParams.set('_embed', 'author,wp:term,wp:featuredmedia');
   url.searchParams.set('per_page', String(slug ? 1 : PAGE_SIZE));
   url.searchParams.set('page', String(page));
@@ -33,8 +36,8 @@ export async function getCatalog(categoryId?: number, search?: string, page = 1,
   }
   return { posts: await response.json(), total: Number(response.headers.get('X-WP-Total') || 0), totalPages: Number(response.headers.get('X-WP-TotalPages') || 0) };
 }
-export async function getPosts(slug?: string, categoryId?: number, search?: string): Promise<Post[]> {
-  return (await getCatalog(categoryId, search, 1, slug)).posts;
+export async function getPosts(slug?: string, categoryId?: number, search?: string, language: Language = 'uk'): Promise<Post[]> {
+  return (await getCatalog(categoryId, search, 1, slug, language)).posts;
 }
 export function plainText(html: string) {
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} });
@@ -48,7 +51,7 @@ export function safeContent(html: string) {
   });
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(language: Language = 'uk'): Promise<Category[]> {
   const base = process.env.WORDPRESS_API_URL;
   if (!base) throw new Error('WORDPRESS_API_URL is missing');
   const categories: Category[] = [];
@@ -58,6 +61,7 @@ export async function getCategories(): Promise<Category[]> {
     const url = new URL(`${base.replace(/\/$/, '')}/categories`);
     url.searchParams.set('per_page', '100');
     url.searchParams.set('hide_empty', 'true');
+    url.searchParams.set('lang', language);
     url.searchParams.set('page', String(page));
     const response = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
     if (!response.ok) throw new Error(`CMS returned ${response.status}`);

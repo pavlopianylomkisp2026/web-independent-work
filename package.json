@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "cms:start": "sh scripts/init-env.sh && docker compose up -d db wordpress",
     "cms:seed": "docker compose run --rm cli",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:languages": "node scripts/smoke-languages.mjs"
   },
   "repository": {
     "type": "git",

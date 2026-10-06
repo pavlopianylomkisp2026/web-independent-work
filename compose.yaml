@@ -23,6 +23,7 @@ services:
       WORDPRESS_DB_NAME: wordpress
     volumes:
       - wp_data:/var/www/html
+      - ./wordpress/mu-plugins:/var/www/html/wp-content/mu-plugins:ro
     depends_on:
       db:
         condition: service_healthy
@@ -34,6 +35,7 @@ services:
       WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
     volumes:
       - wp_data:/var/www/html
+      - ./wordpress/mu-plugins:/var/www/html/wp-content/mu-plugins:ro
       - ./scripts/seed.sh:/seed.sh:ro
     entrypoint: [sh, /seed.sh]
     profiles: [tools]
