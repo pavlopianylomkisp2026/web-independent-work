@@ -7,7 +7,7 @@ export type FeaturedMedia = { source_url: string; alt_text?: string; media_detai
 
 export type Post = {
   studyhub_language?: Language; studyhub_translations?: Partial<Record<Language, string>>;
-  id: number; slug: string; date: string; categories: number[];
+  id: number; slug: string; date: string; modified_gmt?: string; categories: number[];
   title: { rendered: string }; excerpt: { rendered: string }; content: { rendered: string };
   _embedded?: { author?: { name: string }[]; "wp:term"?: Category[][]; "wp:featuredmedia"?: FeaturedMedia[] };
 };
@@ -83,4 +83,25 @@ export function postCover(post: Post) {
     if (!['http:', 'https:'].includes(source.protocol)) return undefined;
     return { src: source.href, alt: media.alt_text?.trim() || plainText(post.title.rendered), width: media.media_details?.width || 1200, height: media.media_details?.height || 675 };
   } catch { return undefined; }
+}
+
+export async function getSitemapPosts(language: Language): Promise<Post[]> {
+  const base = process.env.WORDPRESS_API_URL;
+  if (!base) throw new Error('WORDPRESS_API_URL is missing');
+  const posts: Post[] = [];
+  let page = 1; let totalPages = 1;
+  do {
+    const url = new URL(`${base.replace(/\/$/, '')}/posts`);
+    url.searchParams.set('lang', language);
+    url.searchParams.set('status', 'publish');
+    url.searchParams.set('per_page', '100');
+    url.searchParams.set('page', String(page));
+    url.searchParams.set('_fields', 'id,slug,modified_gmt,studyhub_translations');
+    const response = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`Sitemap CMS request failed: ${response.status}`);
+    posts.push(...await response.json());
+    totalPages = Number(response.headers.get('X-WP-TotalPages') || 1);
+    page++;
+  } while (page <= totalPages);
+  return posts;
 }

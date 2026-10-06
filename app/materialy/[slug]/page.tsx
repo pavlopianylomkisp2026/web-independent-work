@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { articleMetadata } from '../../lib/seo';
 import { translator, languagePath, type Language } from '../../lib/i18n';
 import CoverImage from '../../components/cover-image';
 import { notFound } from 'next/navigation';
@@ -6,7 +7,7 @@ import { getPosts, postCover, postCategories, plainText, safeContent } from '../
 export async function generateMetadata({ params, language = 'uk' }: { language?: Language; params: Promise<{ slug: string }> }) {
   const t = translator(language); const prefix = languagePath(language);
   const { slug } = await params;
-  try { const [post] = await getPosts(slug, undefined, undefined, language); return post ? { title: plainText(post.title.rendered), description: plainText(post.excerpt.rendered).trim() } : { title: t('Матеріал не знайдено') }; }
+  try { const [post] = await getPosts(slug, undefined, undefined, language); return post ? articleMetadata(post, language) : { title: t('Матеріал не знайдено') }; }
   catch { return { title: language === 'en' ? 'Article temporarily unavailable' : 'Матеріал тимчасово недоступний' }; }
 }
 export default async function Article({ params, language = 'uk' }: { language?: Language; params: Promise<{ slug: string }> }) {
