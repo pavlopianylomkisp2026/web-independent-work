@@ -17,4 +17,21 @@ assert.equal(drafts.status, 400);
 assert.equal((await drafts.json()).data.details.status.code, 'rest_forbidden_status', 'CMS must explicitly forbid draft access');
 const create = await fetch(`${api}/posts`, {method:'POST', headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'Unauthorized smoke test',status:'draft'})});
 assert.equal(create.status, 401, 'Anonymous visitors must not create posts');
-console.log('PASS: CMS article, homepage, article content, 404, private drafts, write protection (6 checks).');
+const categoryId = post.categories[0];
+const categoryResponse = await fetch(`${api}/categories/${categoryId}`);
+assert.equal(categoryResponse.status, 200);
+const category = await categoryResponse.json();
+const filtered = await fetch(`${site}/?category=${encodeURIComponent(category.slug)}`);
+assert.equal(filtered.status, 200);
+const filteredHtml = await filtered.text();
+assert.ok(filteredHtml.includes(`/materialy/${post.slug}`), 'Category filter must include matching CMS article');
+assert.ok(filteredHtml.includes('aria-current="page"'), 'Selected category must be marked active');
+const allResponse = await fetch(`${api}/posts?per_page=100`);
+const allPosts = await allResponse.json();
+for (const other of allPosts.filter(item => !item.categories.includes(categoryId))) {
+  assert.ok(!filteredHtml.includes(`/materialy/${other.slug}`), 'Category filter must exclude other articles');
+}
+const missingCategory = await fetch(`${site}/?category=does-not-exist-studyhub`);
+assert.equal(missingCategory.status, 200);
+assert.ok((await missingCategory.text()).includes('Такої категорії немає'), 'Unknown category must show an explicit empty state');
+console.log('PASS: CMS article, homepage, article content, 404, private drafts, write protection, category inclusion/exclusion, active filter, unknown category.');
