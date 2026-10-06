@@ -8,19 +8,31 @@ export type Post = {
   _embedded?: { author?: { name: string }[]; "wp:term"?: Category[][] };
 };
 
+export const PAGE_SIZE = 3;
+export type Catalog = { posts: Post[]; total: number; totalPages: number };
 // Only the server contacts the CMS. No administrator credentials are needed.
-export async function getPosts(slug?: string, categoryId?: number, search?: string): Promise<Post[]> {
+export async function getCatalog(categoryId?: number, search?: string, page = 1, slug?: string): Promise<Catalog> {
   const base = process.env.WORDPRESS_API_URL;
   if (!base) throw new Error('WORDPRESS_API_URL is missing');
   const url = new URL(`${base.replace(/\/$/, '')}/posts`);
   url.searchParams.set('_embed', 'author,wp:term');
-  url.searchParams.set('per_page', '12');
+  url.searchParams.set('per_page', String(slug ? 1 : PAGE_SIZE));
+  url.searchParams.set('page', String(page));
   if (categoryId) url.searchParams.set('categories', String(categoryId));
   if (search) url.searchParams.set('search', search);
   if (slug) url.searchParams.set('slug', slug);
   const response = await fetch(url, { next: { revalidate: 60 }, signal: AbortSignal.timeout(8000) });
-  if (!response.ok) throw new Error(`CMS returned ${response.status}`);
-  return response.json();
+  if (!response.ok) {
+    const error = await response.json();
+    if (response.status === 400 && error.code === 'rest_post_invalid_page_number') {
+      return { posts: [], total: 0, totalPages: 0 };
+    }
+    throw new Error(`CMS returned ${response.status}`);
+  }
+  return { posts: await response.json(), total: Number(response.headers.get('X-WP-Total') || 0), totalPages: Number(response.headers.get('X-WP-TotalPages') || 0) };
+}
+export async function getPosts(slug?: string, categoryId?: number, search?: string): Promise<Post[]> {
+  return (await getCatalog(categoryId, search, 1, slug)).posts;
 }
 export function plainText(html: string) {
   return sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} });
