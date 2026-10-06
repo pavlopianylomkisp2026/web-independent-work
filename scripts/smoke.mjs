@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 const api = process.env.WORDPRESS_API_URL || 'http://127.0.0.1:8080/wp-json/wp/v2';
 const site = process.env.SITE_URL || 'http://127.0.0.1:3000';
-const postsResponse = await fetch(`${api}/posts?slug=yak-pratsiuie-cms`);
+const postsResponse = await fetch(`${api}/posts?slug=yak-pratsiuie-cms&_embed=wp:featuredmedia`);
 assert.equal(postsResponse.status, 200);
 const [post] = await postsResponse.json();
 assert.ok(post?.id, 'Seed article must exist in the real CMS');
@@ -10,7 +10,13 @@ assert.equal(home.status, 200);
 assert.ok((await home.text()).includes(`/materialy/${post.slug}`), 'Homepage must link to CMS article');
 const article = await fetch(`${site}/materialy/${post.slug}`);
 assert.equal(article.status, 200);
-assert.ok((await article.text()).includes('REST API передає дані'), 'Article must render CMS content');
+const articleHtml = await article.text();
+assert.ok(articleHtml.includes('REST API передає дані'), 'Article must render CMS content');
+const cover = post._embedded?.['wp:featuredmedia']?.[0];
+if (cover) {
+  assert.ok(articleHtml.includes('class="article-cover"'), 'Featured media must render on article');
+  assert.equal((await fetch(cover.source_url)).status, 200, 'Featured image URL must be accessible');
+}
 assert.equal((await fetch(`${site}/materialy/does-not-exist-studyhub`)).status, 404);
 const drafts = await fetch(`${api}/posts?status=draft`);
 assert.equal(drafts.status, 400);

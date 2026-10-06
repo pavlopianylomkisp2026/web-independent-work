@@ -2,10 +2,12 @@ import sanitizeHtml from 'sanitize-html';
 
 export type Category = { id: number; name: string; slug: string };
 
+export type FeaturedMedia = { source_url: string; alt_text?: string; media_details?: { width?: number; height?: number; sizes?: Record<string, { source_url: string }> } };
+
 export type Post = {
   id: number; slug: string; date: string; categories: number[];
   title: { rendered: string }; excerpt: { rendered: string }; content: { rendered: string };
-  _embedded?: { author?: { name: string }[]; "wp:term"?: Category[][] };
+  _embedded?: { author?: { name: string }[]; "wp:term"?: Category[][]; "wp:featuredmedia"?: FeaturedMedia[] };
 };
 
 export const PAGE_SIZE = 3;
@@ -15,7 +17,7 @@ export async function getCatalog(categoryId?: number, search?: string, page = 1,
   const base = process.env.WORDPRESS_API_URL;
   if (!base) throw new Error('WORDPRESS_API_URL is missing');
   const url = new URL(`${base.replace(/\/$/, '')}/posts`);
-  url.searchParams.set('_embed', 'author,wp:term');
+  url.searchParams.set('_embed', 'author,wp:term,wp:featuredmedia');
   url.searchParams.set('per_page', String(slug ? 1 : PAGE_SIZE));
   url.searchParams.set('page', String(page));
   if (categoryId) url.searchParams.set('categories', String(categoryId));
@@ -67,4 +69,14 @@ export async function getCategories(): Promise<Category[]> {
 }
 export function postCategories(post: Post): Category[] {
   return post._embedded?.['wp:term']?.flat().filter(term => post.categories.includes(term.id)) ?? [];
+}
+
+export function postCover(post: Post) {
+  const media = post._embedded?.['wp:featuredmedia']?.[0];
+  if (!media?.source_url) return undefined;
+  try {
+    const source = new URL(media.source_url);
+    if (!['http:', 'https:'].includes(source.protocol)) return undefined;
+    return { src: source.href, alt: media.alt_text?.trim() || plainText(post.title.rendered), width: media.media_details?.width || 1200, height: media.media_details?.height || 675 };
+  } catch { return undefined; }
 }
