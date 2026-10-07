@@ -11,7 +11,12 @@ export function siteUrl() {
 }
 export function absoluteUrl(path: string) { return new URL(path, siteUrl()).href; }
 export function isLocalSite() { return ['localhost', '127.0.0.1', '[::1]'].includes(siteUrl().hostname) || siteUrl().hostname.endsWith('.localhost'); }
-export function articlePath(language: Language, slug: string) { return `${languagePath(language)}/materialy/${encodeURIComponent(slug)}`; }
+export function articlePath(language: Language, slug: string) {
+  // WordPress stores non-ASCII post_name values as percent-encoded slugs.
+  let decoded = slug;
+  try { decoded = decodeURIComponent(slug); } catch { /* Preserve malformed literal input safely. */ }
+  return `${languagePath(language)}/materialy/${encodeURIComponent(decoded)}`;
+}
 export function homeMetadata(language: Language, filtered = false): Metadata {
   const title = language === 'en' ? 'StudyHub — learn together' : 'StudyHub — вчимося разом';
   const description = language === 'en' ? 'Learn web development through clear explanations and practical examples.' : 'Освітній портал про веброзробку: зрозумілі матеріали для студентів.';
