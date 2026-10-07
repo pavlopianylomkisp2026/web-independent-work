@@ -13,7 +13,7 @@ for (const language of ['uk','en']) {
     assert.equal(response.status,200);
     const posts=await response.json();
     pages=Number(response.headers.get('X-WP-TotalPages') || 1);
-    for (const post of posts) assert.ok(xml.includes(`${origin}${language==='en'?'/en':''}/materialy/${encodeURIComponent(post.slug)}`),'Every published article must appear in sitemap');
+    for (const post of posts) assert.ok(xml.includes(`${origin}${language==='en'?'/en':''}/materialy/${encodeURIComponent(decodeURIComponent(post.slug))}`),'Every published article must appear in sitemap');
     page++;
   } while(page<=pages);
 }
